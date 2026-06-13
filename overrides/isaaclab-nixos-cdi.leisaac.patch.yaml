@@ -1,0 +1,51 @@
+# Copied by scripts/bootstrap-isaaclab.sh into IsaacLab/docker/.
+# Purpose:
+#   1. Make Isaac Lab official Docker compose usable on NixOS CDI setups.
+#   2. Mount this repository's ./leisaac directory and helper scripts.
+#
+# Docker Compose's !reset tag removes the upstream deploy.resources reservation
+# that requests driver: nvidia. NixOS CDI setups are usually more reliable with
+# devices: ["nvidia.com/gpu=all"] instead.
+
+services:
+  isaac-lab-base:
+    deploy: !reset null
+    devices:
+      - "nvidia.com/gpu=all"
+    environment:
+      ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-42}
+      RMW_IMPLEMENTATION: ${RMW_IMPLEMENTATION:-rmw_fastrtps_cpp}
+      NVIDIA_DRIVER_CAPABILITIES: all
+    volumes:
+      - type: bind
+        source: ../../leisaac
+        target: /workspace/leisaac
+      - type: bind
+        source: ../../scripts/setup-leisaac-inside-isaaclab.sh
+        target: /workspace/setup-leisaac-inside-isaaclab.sh
+        read_only: true
+      - type: bind
+        source: ../../scripts/setup-mujoco-python-inside-isaaclab.sh
+        target: /workspace/setup-mujoco-python-inside-isaaclab.sh
+        read_only: true
+
+  isaac-lab-ros2:
+    deploy: !reset null
+    devices:
+      - "nvidia.com/gpu=all"
+    environment:
+      ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-42}
+      RMW_IMPLEMENTATION: ${RMW_IMPLEMENTATION:-rmw_fastrtps_cpp}
+      NVIDIA_DRIVER_CAPABILITIES: all
+    volumes:
+      - type: bind
+        source: ../../leisaac
+        target: /workspace/leisaac
+      - type: bind
+        source: ../../scripts/setup-leisaac-inside-isaaclab.sh
+        target: /workspace/setup-leisaac-inside-isaaclab.sh
+        read_only: true
+      - type: bind
+        source: ../../scripts/setup-mujoco-python-inside-isaaclab.sh
+        target: /workspace/setup-mujoco-python-inside-isaaclab.sh
+        read_only: true

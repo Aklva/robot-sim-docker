@@ -1,0 +1,9 @@
+.env
+ros_ws/build/
+ros_ws/install/
+ros_ws/log/
+mujoco/*
+!mujoco/.gitkeep
+isaac-cache/**
+!isaac-cache/**/.gitkeep
+*.xauth

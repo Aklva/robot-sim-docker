@@ -1,0 +1,40 @@
+name: robot-sim
+
+services:
+  ros-gazebo:
+    build:
+      context: ./containers/ros-gazebo
+      args:
+        USERNAME: ${CONTAINER_USER:-ros}
+        USER_UID: ${USER_UID:-1000}
+        USER_GID: ${USER_GID:-1000}
+    image: local/robot-sim-ros-gazebo:humble
+    container_name: robot-sim-ros-gazebo
+
+    # ROS 2 DDS discovery and GUI development are simplest with host networking.
+    network_mode: host
+    ipc: host
+    stdin_open: true
+    tty: true
+
+    environment:
+      DISPLAY: ${DISPLAY}
+      XAUTHORITY: /tmp/.docker.xauth
+      QT_X11_NO_MITSHM: "1"
+      ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-42}
+      RMW_IMPLEMENTATION: ${RMW_IMPLEMENTATION:-rmw_fastrtps_cpp}
+      ROBOT_TYPE: ${ROBOT_TYPE:-PF_P441C}
+      LIMX_WS: /home/${CONTAINER_USER:-ros}/limx_ws
+      MUJOCO_GL: ${MUJOCO_GL:-glfw}
+
+    volumes:
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ${XAUTH:-/tmp/.docker.xauth}:/tmp/.docker.xauth:ro
+      - ./ros_ws:/home/${CONTAINER_USER:-ros}/limx_ws:rw
+      - ./mujoco:/home/${CONTAINER_USER:-ros}/mujoco:rw
+      - ./scripts:/opt/robot-sim/scripts:ro
+      - /dev/shm:/dev/shm
+
+    devices:
+      # Mesa / Intel / AMD render nodes. NVIDIA CDI is added by compose.nvidia-cdi.yml.
+      - /dev/dri:/dev/dri

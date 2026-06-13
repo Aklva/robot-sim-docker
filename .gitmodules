@@ -1,0 +1,23 @@
+[submodule "IsaacLab"]
+	path = IsaacLab
+	url = https://github.com/isaac-sim/IsaacLab.git
+[submodule "leisaac"]
+	path = leisaac
+	url = https://github.com/LightwheelAI/leisaac.git
+	branch = main
+[submodule "ros_ws/src/robot-description"]
+	path = ros_ws/src/robot-description
+	url = https://github.com/limxdynamics/robot-description.git
+	branch = master
+[submodule "ros_ws/src/limxsdk-lowlevel"]
+	path = ros_ws/src/limxsdk-lowlevel
+	url = https://github.com/limxdynamics/limxsdk-lowlevel.git
+	branch = master
+[submodule "ros_ws/src/robot-visualization"]
+	path = ros_ws/src/robot-visualization
+	url = https://github.com/limxdynamics/robot-visualization.git
+	branch = master
+[submodule "ros_ws/src/tron1-gazebo-ros2"]
+	path = ros_ws/src/tron1-gazebo-ros2
+	url = https://github.com/limxdynamics/tron1-gazebo-ros2.git
+	branch = feature/humble

@@ -1,0 +1,8 @@
+# NixOS-oriented NVIDIA GPU override.
+# Requires hardware.nvidia-container-toolkit.enable = true and Docker CDI support.
+services:
+  ros-gazebo:
+    devices:
+      - "nvidia.com/gpu=all"
+    environment:
+      NVIDIA_DRIVER_CAPABILITIES: all
