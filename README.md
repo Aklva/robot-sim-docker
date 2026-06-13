@@ -1,67 +1,35 @@
 # robot-sim-docker
 
-NixOS host + Docker containers for a ROS 2 Humble / Gazebo / Isaac Lab / LeIsaac / MuJoCo development environment.
+Command workspace for running ROS 2 Humble, Gazebo Classic, LimX, Isaac Lab, LeIsaac, and MuJoCo from containers on a NixOS host.
 
-The design goal is to keep NixOS clean and let Ubuntu/NVIDIA containers carry the non-Nix robotics stack:
+The host stays lean: Docker, NVIDIA driver/toolkit/CDI, and X11 helpers live on NixOS; ROS, Gazebo, Isaac, Conda-style Python stacks, and MuJoCo GUI workloads stay inside containers.
 
-- `ros-gazebo`: Ubuntu 22.04 / ROS 2 Humble / Gazebo Classic / LimX workspace / standalone MuJoCo GUI.
-- `IsaacLab`: official Isaac Lab Docker workflow, checked out at `v2.3.0` by default, using the `ros2` image extension.
-- `leisaac`: mounted into the Isaac Lab container from the project root.
-
-## Directory layout
+## Workspace Map
 
 ```text
 robot-sim-docker/
 ├─ compose.yml
 ├─ compose.nvidia-cdi.yml
-├─ containers/
-│  └─ ros-gazebo/
-│     └─ Dockerfile
-├─ nixos/
-│  ├─ configuration-fragment.nix
-│  └─ host-notes.md
-├─ overrides/
-│  ├─ isaaclab-leisaac.env
-│  └─ isaaclab-nixos-cdi.leisaac.patch.yaml
-├─ prompts/
-│  └─ codex.md
+├─ containers/ros-gazebo/Dockerfile
 ├─ scripts/
-│  ├─ prepare-x11.sh
-│  ├─ compose.sh
-│  ├─ build-limx-ws.sh
-│  ├─ bootstrap-isaaclab.sh
-│  └─ ...
-├─ IsaacLab/                 # git submodule, official Isaac Lab
-├─ ros_ws/
-│  └─ src/
-│     ├─ robot-description/  # git submodule
-│     ├─ limxsdk-lowlevel/   # git submodule
-│     ├─ robot-visualization/ # git submodule
-│     └─ tron1-gazebo-ros2/  # git submodule
-├─ leisaac/                  # git submodule
-├─ mujoco/
-└─ isaac-cache/
+├─ overrides/
+├─ nixos/
+├─ IsaacLab/                 # submodule: official Isaac Lab
+├─ leisaac/                  # submodule: LeIsaac
+├─ ros_ws/src/
+│  ├─ robot-description/     # submodule
+│  ├─ limxsdk-lowlevel/      # submodule
+│  ├─ robot-visualization/   # submodule
+│  └─ tron1-gazebo-ros2/     # submodule, feature/humble
+├─ mujoco/                   # downloaded MuJoCo standalone files
+└─ isaac-cache/              # Isaac cache bind-mount placeholders
 ```
 
-`IsaacLab/`, `leisaac/`, and the LimX workspace sources under `ros_ws/src/` are tracked as Git submodules. Generated Docker, ROS build, MuJoCo, and cache outputs are ignored.
+Generated outputs are ignored: `ros_ws/build/`, `ros_ws/install/`, `ros_ws/log/`, MuJoCo release archives/extracts, Isaac cache contents, and `.env`.
 
-## 1. Host setup on NixOS
+## Command Index
 
-Merge `nixos/configuration-fragment.nix` into your NixOS config and replace `YOUR_USER`.
-
-This fragment intentionally does **not** install `docker-compose` or `mesa-demos` globally:
-
-- use `docker compose`, not the old standalone `docker-compose` binary;
-- use `nix shell nixpkgs#mesa-demos -c glxinfo -B` only when a host-side GL check is needed.
-
-After rebuilding:
-
-```bash
-sudo nixos-rebuild switch
-newgrp docker
-```
-
-Check Docker, Compose, and NVIDIA CDI:
+### Check The Host
 
 ```bash
 docker compose version
@@ -70,223 +38,123 @@ nvidia-ctk cdi list || true
 docker run --rm --device nvidia.com/gpu=all ubuntu:22.04 nvidia-smi
 ```
 
-## 2. First-time project setup
+For a host-side OpenGL check without globally installing `mesa-demos`:
 
 ```bash
-tar -xzf robot-sim-docker.tar.gz
-cd robot-sim-docker
+nix shell nixpkgs#mesa-demos -c glxinfo -B
+```
+
+### Refresh This Workspace
+
+```bash
 git submodule update --init --recursive
-cp .env.example .env
+cp -n .env.example .env
 ```
 
-Edit `.env` so `USER_UID` and `USER_GID` match your host user:
+Edit `.env` when you want to change the container UID/GID, ROS domain, robot type, Isaac Lab ref, or MuJoCo version.
 
-```bash
-id -u
-id -g
-```
-
-Prepare X11 forwarding:
+### Prepare Or Revoke GUI Access
 
 ```bash
 ./scripts/prepare-x11.sh
 ```
 
-If your compositor or XWayland setup rejects the cookie-only method, retry with local xhost relaxation:
+If cookie-based X11 auth fails under Wayland/XWayland:
 
 ```bash
 X11_USE_XHOST=1 ./scripts/prepare-x11.sh
 ```
 
-Revoke later with:
+Revoke the `xhost` fallback:
 
 ```bash
 ./scripts/revoke-x11.sh
 ```
 
-## 3. ROS 2 Humble + Gazebo container
+### Validate Compose
 
-Build the container:
+```bash
+bash -n scripts/*.sh
+./scripts/compose.sh config
+```
+
+The merged `ros-gazebo` service should include:
+
+```yaml
+devices:
+  - nvidia.com/gpu=all
+```
+
+### Build The ROS/Gazebo Image
 
 ```bash
 ./scripts/compose.sh build ros-gazebo
 ```
 
-Run a basic GUI smoke test:
-
-```bash
-./scripts/check-gui.sh
-```
-
-Run the ROS 2 talker/listener smoke test inside one container:
-
-```bash
-./scripts/compose.sh run --rm ros-gazebo /opt/robot-sim/scripts/check-ros2-talk-listen.sh
-```
-
-Open an interactive shell:
+### Enter The ROS/Gazebo Container
 
 ```bash
 ./scripts/compose.sh run --rm ros-gazebo bash
 ```
 
-## 4. LimX / Gazebo workspace
-
-Build the LimX workspace inside the ROS/Gazebo container:
+### Check ROS 2 Pub/Sub
 
 ```bash
+./scripts/compose.sh run --rm ros-gazebo /opt/robot-sim/scripts/check-ros2-talk-listen.sh
+```
+
+### Check GUI Rendering From The Container
+
+```bash
+./scripts/check-gui.sh
+```
+
+This runs `glxinfo -B` and a short `xeyes` smoke test from the `ros-gazebo` container.
+
+### Build The LimX Workspace
+
+```bash
+git submodule update --init --recursive \
+  ros_ws/src/robot-description \
+  ros_ws/src/limxsdk-lowlevel \
+  ros_ws/src/robot-visualization \
+  ros_ws/src/tron1-gazebo-ros2
+
 ./scripts/compose.sh run --rm ros-gazebo /opt/robot-sim/scripts/build-limx-ws.sh
 ```
 
-The LimX source repositories are submodules. The build script keeps its old clone-on-missing behavior, but a fresh checkout should normally use:
+The build script still clones missing sources as a fallback, but this workspace normally uses submodules.
 
-```bash
-git submodule update --init --recursive ros_ws/src/robot-description ros_ws/src/limxsdk-lowlevel ros_ws/src/robot-visualization ros_ws/src/tron1-gazebo-ros2
-```
-
-Patch `empty_world.launch.py` so `use_support=true`:
+### Patch LimX Gazebo Support Mode
 
 ```bash
 ./scripts/compose.sh run --rm ros-gazebo /opt/robot-sim/scripts/patch-empty-world-use-support.sh
 ```
 
-Launch Gazebo:
+This patches generated and source `empty_world.launch.py` files so `use_support=true`.
+
+### Launch LimX In Gazebo
 
 ```bash
 ./scripts/compose.sh run --rm ros-gazebo /opt/robot-sim/scripts/run-gazebo-empty-world.sh
 ```
 
-Change robot type in `.env` if needed:
+Change the robot in `.env`:
 
 ```dotenv
 ROBOT_TYPE=PF_P441C
 ```
 
-## 5. Isaac Lab official Docker workflow
-
-This project adopts the official Isaac Lab Docker workflow rather than maintaining a separate hand-written Isaac Lab image.
-
-Prepare the upstream checkout and copy NixOS/LeIsaac overrides into `IsaacLab/docker/`:
+### Prepare Isaac Lab Overrides
 
 ```bash
 git submodule update --init IsaacLab
 ./scripts/bootstrap-isaaclab.sh
 ```
 
-Start the official `ros2` container profile:
+This keeps upstream Isaac Lab files in the submodule and copies only local override/env files into `IsaacLab/docker/`.
 
-```bash
-./scripts/start-isaaclab-ros2.sh
-```
-
-Enter it:
-
-```bash
-./scripts/enter-isaaclab-ros2.sh
-```
-
-Stop it:
-
-```bash
-./scripts/stop-isaaclab-ros2.sh
-```
-
-The override file mounted into Isaac Lab does three things:
-
-1. removes the upstream `deploy.resources.reservations.devices` NVIDIA runtime reservation with Docker Compose `!reset`;
-2. adds NixOS-style CDI device selection, `nvidia.com/gpu=all`;
-3. bind-mounts this repository's `./leisaac` directory at `/workspace/leisaac`.
-
-## 6. LeIsaac
-
-LeIsaac is a submodule mounted into the Isaac Lab container. Initialize it with:
-
-```bash
-git submodule update --init --recursive leisaac
-```
-
-`./scripts/bootstrap-leisaac-host.sh` is kept as a fallback for non-submodule worktrees.
-
-Then enter the Isaac Lab ROS2 container and install it into Isaac Lab's Python environment:
-
-```bash
-./scripts/enter-isaaclab-ros2.sh
-bash /workspace/setup-leisaac-inside-isaaclab.sh
-```
-
-The expected host layout after unpacking/cloning is:
-
-```text
-leisaac/
-└─ source/
-   └─ leisaac/
-```
-
-The expected asset layout from the original notes is:
-
-```text
-leisaac/
-└── assets/
-    ├── robots/
-    │   └── so101_follower.usd
-    └── scenes/
-        └── table_with_cube/
-            ├── scene.usd
-            ├── cube/
-            └── textures/
-```
-
-## 7. MuJoCo
-
-For standalone MuJoCo GUI on NixOS, run it inside the Ubuntu ROS/Gazebo container rather than directly on the host:
-
-```bash
-./scripts/compose.sh run --rm ros-gazebo /opt/robot-sim/scripts/setup-mujoco-standalone.sh
-./scripts/compose.sh run --rm ros-gazebo /opt/robot-sim/scripts/run-mujoco-simulate.sh
-```
-
-For Python MuJoCo inside Isaac Lab:
-
-```bash
-./scripts/enter-isaaclab-ros2.sh
-bash /workspace/setup-mujoco-python-inside-isaaclab.sh
-```
-
-## 8. Troubleshooting
-
-### `docker compose` is unavailable
-
-First check:
-
-```bash
-docker compose version
-```
-
-If the plugin is missing despite `virtualisation.docker.enable = true`, inspect your nixpkgs channel or Docker package override. As a temporary workaround only, you can use a shell:
-
-```bash
-nix shell nixpkgs#docker-compose -c docker compose version
-```
-
-### NVIDIA CDI is unavailable
-
-Check:
-
-```bash
-nvidia-ctk cdi list || true
-```
-
-Try regenerating after driver changes:
-
-```bash
-sudo systemctl restart nvidia-cdi-refresh.service 2>/dev/null || true
-sudo systemctl restart nvidia-container-toolkit-cdi-generator.service 2>/dev/null || true
-nvidia-ctk cdi list || true
-```
-
-### Isaac Lab official compose still tries `driver: nvidia`
-
-Check the merged config:
+### Inspect Isaac Lab Merged Compose
 
 ```bash
 cd IsaacLab
@@ -295,20 +163,81 @@ cd IsaacLab
   --env-files .env.leisaac
 ```
 
-Confirm that `deploy:` is removed/reset and `devices:` contains `nvidia.com/gpu=all`.
+Check that:
 
-### GUI does not open
+- service name is `isaac-lab-ros2`
+- service-level `deploy:` is absent/reset
+- `devices:` contains `nvidia.com/gpu=all`
+- `./leisaac` mounts to `/workspace/leisaac`
+- setup scripts mount read-only under `/workspace/`
 
-Run:
-
-```bash
-./scripts/prepare-x11.sh
-./scripts/check-gui.sh
-```
-
-If that fails under Wayland/XWayland:
+### Start Isaac Lab ROS 2
 
 ```bash
-X11_USE_XHOST=1 ./scripts/prepare-x11.sh
-./scripts/check-gui.sh
+./scripts/start-isaaclab-ros2.sh
 ```
+
+### Enter Isaac Lab ROS 2
+
+```bash
+./scripts/enter-isaaclab-ros2.sh
+```
+
+### Stop Isaac Lab ROS 2
+
+```bash
+./scripts/stop-isaaclab-ros2.sh
+```
+
+### Install LeIsaac Inside Isaac Lab
+
+```bash
+git submodule update --init --recursive leisaac
+./scripts/enter-isaaclab-ros2.sh
+bash /workspace/setup-leisaac-inside-isaaclab.sh
+```
+
+`./scripts/bootstrap-leisaac-host.sh` remains available for non-submodule worktrees.
+
+### Install MuJoCo Python Inside Isaac Lab
+
+```bash
+./scripts/enter-isaaclab-ros2.sh
+bash /workspace/setup-mujoco-python-inside-isaaclab.sh
+```
+
+### Download MuJoCo Standalone Into The ROS/Gazebo Container Workspace
+
+```bash
+./scripts/compose.sh run --rm ros-gazebo /opt/robot-sim/scripts/setup-mujoco-standalone.sh
+```
+
+### Run MuJoCo Standalone GUI
+
+```bash
+./scripts/compose.sh run --rm ros-gazebo /opt/robot-sim/scripts/run-mujoco-simulate.sh
+```
+
+Run a specific model:
+
+```bash
+./scripts/compose.sh run --rm ros-gazebo \
+  /opt/robot-sim/scripts/run-mujoco-simulate.sh \
+  /home/ros/mujoco/mujoco-3.4.0/model/humanoid/humanoid.xml
+```
+
+### Clean Generated Workspace Outputs
+
+```bash
+rm -rf ros_ws/build ros_ws/install ros_ws/log
+rm -rf mujoco/mujoco-* mujoco/*.tar.gz
+find isaac-cache -mindepth 2 ! -name .gitkeep -delete
+```
+
+## Notes
+
+- Use `docker compose`, not the legacy standalone `docker-compose`.
+- Prefer NVIDIA CDI on NixOS: `nvidia.com/gpu=all`.
+- Do not move ROS, Gazebo, Conda, Isaac Lab, or MuJoCo GUI packages into the global NixOS environment.
+- The `ros-gazebo` image may contain `mesa-utils`; the host should use `nix shell nixpkgs#mesa-demos -c glxinfo -B` only when needed.
+- Isaac Lab is driven through official `docker/container.py`; local differences live in `overrides/` and are re-applied by `./scripts/bootstrap-isaaclab.sh`.
