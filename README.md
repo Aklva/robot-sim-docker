@@ -1,6 +1,6 @@
 # robot-sim-docker
 
-Command workspace for running ROS 2 Humble, Gazebo Classic, LimX, Isaac Lab, LeIsaac, and MuJoCo from containers on a NixOS host.
+Command workspace for running ROS 2 Humble with Gazebo Classic/LimX, ROS 2 Jazzy with Isaac Lab 2.3/Isaac Sim 5.1, LeIsaac, and MuJoCo from containers on a NixOS host.
 
 The host stays lean: Docker, NVIDIA driver/toolkit/CDI, and X11 helpers live on NixOS; ROS, Gazebo, Isaac, Conda-style Python stacks, and MuJoCo GUI workloads stay inside containers.
 
@@ -154,6 +154,18 @@ git submodule update --init IsaacLab
 
 This keeps upstream Isaac Lab files in the submodule and copies only local override/env files into `IsaacLab/docker/`.
 
+The tested compatibility set is pinned by immutable commit IDs and base-image
+digests in `versions.env`. Verify it without building:
+
+```bash
+./scripts/check-reproducibility.sh --registry
+```
+
+`start-isaaclab-ros2.sh` runs this check automatically and refuses to build if
+the upstream image tag has moved or either submodule is at a different commit.
+For an intentional offline start using an already cached image, set
+`REPRODUCIBILITY_VERIFY_REGISTRY=0`.
+
 ### Inspect Isaac Lab Merged Compose
 
 ```bash
@@ -177,11 +189,23 @@ Check that:
 ./scripts/start-isaaclab-ros2.sh
 ```
 
+By default, Isaac Lab invokes Compose with `--build`. Docker checks the build
+inputs on every start and reports unchanged steps as `CACHED`; it does not
+execute those steps again. To skip even this cache check and use the existing
+local image explicitly:
+
+```bash
+./scripts/start-isaaclab-ros2.sh --no-build
+```
+
 ### Enter Isaac Lab ROS 2
 
 ```bash
 ./scripts/enter-isaaclab-ros2.sh
 ```
+
+This refreshes the stable `/tmp/.docker.xauth` file and enters the running
+container directly; it does not use Isaac Lab's ephemeral Xauthority state.
 
 ### Stop Isaac Lab ROS 2
 

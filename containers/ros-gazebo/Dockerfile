@@ -1,4 +1,5 @@
-FROM osrf/ros:humble-desktop-full
+ARG ROS_GAZEBO_BASE_IMAGE=osrf/ros:humble-desktop-full@sha256:1db1e4e941d4f77fab55bcd479158a75273329335e86ec468bff280859e8178c
+FROM ${ROS_GAZEBO_BASE_IMAGE}
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LANG=en_US.UTF-8

@@ -5,6 +5,7 @@ services:
     build:
       context: ./containers/ros-gazebo
       args:
+        ROS_GAZEBO_BASE_IMAGE: ${ROS_GAZEBO_BASE_IMAGE}
         USERNAME: ${CONTAINER_USER:-ros}
         USER_UID: ${USER_UID:-1000}
         USER_GID: ${USER_GID:-1000}

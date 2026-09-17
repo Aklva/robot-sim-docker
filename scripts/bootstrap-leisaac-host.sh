@@ -6,6 +6,7 @@ cd "${ROOT_DIR}"
 
 set -a
 [[ -f .env ]] && source .env
+source versions.env
 set +a
 
 LEISAAC_DIR="${LEISAAC_DIR:-leisaac}"
@@ -17,7 +18,11 @@ if [[ ! -d "${LEISAAC_DIR}/source/leisaac" ]] \
 fi
 
 if [[ -d "${LEISAAC_DIR}/source/leisaac" ]]; then
-  echo "[OK] ${LEISAAC_DIR} already looks like a LeIsaac checkout."
+  if [[ -e "${LEISAAC_DIR}/.git" ]]; then
+    git -C "${LEISAAC_DIR}" checkout "${LEISAAC_REF}"
+  fi
+  ./scripts/check-reproducibility.sh
+  echo "[OK] ${LEISAAC_DIR} is at the pinned LeIsaac commit."
   exit 0
 fi
 
@@ -33,4 +38,6 @@ fi
 
 rm -rf "${LEISAAC_DIR}"
 git clone --recursive "${LEISAAC_REPO}" "${LEISAAC_DIR}"
+git -C "${LEISAAC_DIR}" checkout "${LEISAAC_REF}"
+git -C "${LEISAAC_DIR}" submodule update --init --recursive
 echo "[OK] cloned LeIsaac into ${LEISAAC_DIR}"

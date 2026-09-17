@@ -6,10 +6,11 @@ cd "${ROOT_DIR}"
 
 set -a
 [[ -f .env ]] && source .env
+source versions.env
 set +a
 
 ISAACLAB_REPO="${ISAACLAB_REPO:-https://github.com/isaac-sim/IsaacLab.git}"
-ISAACLAB_REF="${ISAACLAB_REF:-v2.3.0}"
+ISAACLAB_REF="${ISAACLAB_REF}"
 ISAACLAB_DIR="${ISAACLAB_DIR:-IsaacLab}"
 ISAACLAB_X11="${ISAACLAB_X11:-1}"
 
@@ -40,6 +41,10 @@ cp overrides/isaaclab-nixos-cdi.leisaac.patch.yaml \
   "${ISAACLAB_DIR}/docker/docker-compose.nixos-cdi.leisaac.patch.yaml"
 cp overrides/isaaclab-leisaac.env \
   "${ISAACLAB_DIR}/docker/.env.leisaac"
+cp overrides/Dockerfile.ros2.jazzy \
+  "${ISAACLAB_DIR}/docker/Dockerfile.ros2.jazzy"
+
+./scripts/check-reproducibility.sh
 
 # Pre-answer Isaac Lab's X11 prompt when requested.
 # container.py uses a ConfigParser-style docker/.container.cfg with section [X11].

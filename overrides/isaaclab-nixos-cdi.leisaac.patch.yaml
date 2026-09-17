@@ -13,10 +13,21 @@ services:
     devices:
       - "nvidia.com/gpu=all"
     environment:
+      DISPLAY: ${DISPLAY:-:0}
+      TERM: ${TERM:-xterm-256color}
+      QT_X11_NO_MITSHM: "1"
+      XAUTHORITY: /tmp/.docker.xauth
       ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-42}
       RMW_IMPLEMENTATION: ${RMW_IMPLEMENTATION:-rmw_fastrtps_cpp}
       NVIDIA_DRIVER_CAPABILITIES: all
     volumes:
+      - type: bind
+        source: /tmp/.X11-unix
+        target: /tmp/.X11-unix
+      - type: bind
+        source: ${XAUTH:-/tmp/.docker.xauth}
+        target: /tmp/.docker.xauth
+        read_only: true
       - type: bind
         source: ../../leisaac
         target: /workspace/leisaac
@@ -30,14 +41,27 @@ services:
         read_only: true
 
   isaac-lab-ros2:
+    build:
+      dockerfile: docker/Dockerfile.ros2.jazzy
     deploy: !reset null
     devices:
       - "nvidia.com/gpu=all"
     environment:
+      DISPLAY: ${DISPLAY:-:0}
+      TERM: ${TERM:-xterm-256color}
+      QT_X11_NO_MITSHM: "1"
+      XAUTHORITY: /tmp/.docker.xauth
       ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-42}
       RMW_IMPLEMENTATION: ${RMW_IMPLEMENTATION:-rmw_fastrtps_cpp}
       NVIDIA_DRIVER_CAPABILITIES: all
     volumes:
+      - type: bind
+        source: /tmp/.X11-unix
+        target: /tmp/.X11-unix
+      - type: bind
+        source: ${XAUTH:-/tmp/.docker.xauth}
+        target: /tmp/.docker.xauth
+        read_only: true
       - type: bind
         source: ../../leisaac
         target: /workspace/leisaac
