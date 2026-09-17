@@ -27,7 +27,9 @@
   hardware.nvidia = {
     modesetting.enable = true;
     nvidiaSettings = true;
-    package = config.boot.kernelPackages.nvidiaPackages.stable;
+    # Isaac Sim 5.1's GUI RTX renderer crashes on RTX 50-series GPUs with
+    # the 595 branch. Pin the maintained 580 branch for this workload.
+    package = config.boot.kernelPackages.nvidiaPackages.legacy_580;
   };
 
   hardware.nvidia-container-toolkit.enable = true;

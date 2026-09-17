@@ -14,7 +14,9 @@ services:
       - "nvidia.com/gpu=all"
     environment:
       DISPLAY: ${DISPLAY:-:0}
-      TERM: ${TERM:-xterm-256color}
+      # The image does not ship terminal definitions for host-specific values
+      # such as xterm-ghostty. Use a broadly supported compatible terminal.
+      TERM: xterm-256color
       QT_X11_NO_MITSHM: "1"
       XAUTHORITY: /tmp/.docker.xauth
       ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-42}
@@ -48,7 +50,9 @@ services:
       - "nvidia.com/gpu=all"
     environment:
       DISPLAY: ${DISPLAY:-:0}
-      TERM: ${TERM:-xterm-256color}
+      # The image does not ship terminal definitions for host-specific values
+      # such as xterm-ghostty. Use a broadly supported compatible terminal.
+      TERM: xterm-256color
       QT_X11_NO_MITSHM: "1"
       XAUTHORITY: /tmp/.docker.xauth
       ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-42}

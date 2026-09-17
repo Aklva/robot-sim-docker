@@ -1,0 +1,33 @@
+# ignore .git related folders
+.git/
+.github/
+.gitignore
+# ignore docs
+docs/
+# copy in licenses folder to the container
+!docs/licenses/
+# ignore logs
+**/logs/
+**/runs/
+**/output/*
+**/outputs/*
+**/videos/*
+*.tmp
+# Docker orchestration and build-definition files are consumed by Docker on
+# the host; they are not needed by the Isaac Lab image. Excluding them keeps
+# X11/CDI/Compose changes from invalidating the large `COPY ../` layer.
+docker/Dockerfile*
+docker/docker-compose*.yaml
+docker/x11.yaml
+docker/.env*
+docker/cluster/exports/
+docker/.container.cfg
+# ignore recordings
+recordings/
+# ignore __pycache__
+**/__pycache__/
+**/*.egg-info/
+# ignore isaac sim symlink
+_isaac_sim?
+# Docker history
+docker/.isaac-lab-docker-history

@@ -26,6 +26,15 @@ else
   ./scripts/check-reproducibility.sh
 fi
 
+# /tmp is cleared on reboot. Create the bind-mount source before either
+# startup path reaches Docker; otherwise Docker creates a directory at the
+# missing file path and the container can no longer mount Xauthority.
+if [[ "${ISAACLAB_X11:-1}" == "1" ]]; then
+  ./scripts/prepare-x11.sh
+else
+  : > "${XAUTH:-/tmp/.docker.xauth}"
+fi
+
 # Optional fast path. The default below intentionally preserves Isaac Lab's
 # upstream `--build` behavior: Docker checks inputs on every start and reuses
 # cached layers when nothing changed.
@@ -34,12 +43,6 @@ if (( skip_build == 1 )); then
     echo "[ERROR] isaac-lab-ros2 does not exist; start once without --no-build." >&2
     exit 1
   fi
-  if [[ "${ISAACLAB_X11:-1}" == "1" ]]; then
-    ./scripts/prepare-x11.sh
-  else
-    : > "${XAUTH:-/tmp/.docker.xauth}"
-  fi
-
   cd "${ISAACLAB_DIR}/docker"
   exec docker compose \
     --file docker-compose.yaml \

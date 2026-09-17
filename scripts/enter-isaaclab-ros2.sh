@@ -28,6 +28,7 @@ fi
 # path and incorrectly asks for an image rebuild after that file is removed.
 exec docker exec --interactive --tty \
   -e "DISPLAY=${DISPLAY:-:0}" \
+  -e TERM=xterm-256color \
   -e XAUTHORITY=/tmp/.docker.xauth \
   "${container_name}" \
   bash "$@"

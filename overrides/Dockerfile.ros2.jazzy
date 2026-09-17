@@ -8,6 +8,20 @@ FROM isaac-lab-base${DOCKER_NAME_SUFFIX} AS ros2
 
 ARG ROS2_APT_PACKAGE
 
+# Isaac Lab 2.3 pins flatdict 4.0.1. Its legacy build imports
+# pkg_resources and fails in pip's isolated build environment. The upstream
+# installer runs extensions through `find -exec`, which can hide that failure
+# and leave the core `isaaclab` package absent while the image build succeeds.
+# Install flatdict without isolation, reinstall the core with dependencies,
+# and fail the build explicitly if either module is still unavailable.
+RUN --mount=type=cache,target=${DOCKER_USER_HOME}/.cache/pip \
+    ${ISAACLAB_PATH}/isaaclab.sh -p -m pip install \
+      --no-build-isolation flatdict==4.0.1 && \
+    ${ISAACLAB_PATH}/isaaclab.sh -p -m pip install \
+      --editable ${ISAACLAB_PATH}/source/isaaclab && \
+    ${ISAACLAB_PATH}/isaaclab.sh -p -c \
+      "import flatdict; import isaaclab; print('Isaac Lab core OK')"
+
 RUN --mount=type=cache,target=/var/cache/apt \
     apt-get update && apt-get install -y --no-install-recommends \
     curl \

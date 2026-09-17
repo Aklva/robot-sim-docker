@@ -51,6 +51,7 @@ if [[ -e IsaacLab/.git ]]; then
   upstream_sim_version="$(sed -n 's/^ISAACSIM_VERSION=//p' IsaacLab/docker/.env.base)"
   check_equal "Isaac Sim version" "${upstream_sim_version}" "${ISAACSIM_VERSION}"
   for pair in \
+    "overrides/isaaclab.dockerignore:IsaacLab/.dockerignore" \
     "overrides/Dockerfile.ros2.jazzy:IsaacLab/docker/Dockerfile.ros2.jazzy" \
     "overrides/isaaclab-leisaac.env:IsaacLab/docker/.env.leisaac" \
     "overrides/isaaclab-nixos-cdi.leisaac.patch.yaml:IsaacLab/docker/docker-compose.nixos-cdi.leisaac.patch.yaml"; do

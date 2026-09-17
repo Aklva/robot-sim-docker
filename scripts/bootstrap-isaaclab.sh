@@ -43,6 +43,8 @@ cp overrides/isaaclab-leisaac.env \
   "${ISAACLAB_DIR}/docker/.env.leisaac"
 cp overrides/Dockerfile.ros2.jazzy \
   "${ISAACLAB_DIR}/docker/Dockerfile.ros2.jazzy"
+cp overrides/isaaclab.dockerignore \
+  "${ISAACLAB_DIR}/.dockerignore"
 
 ./scripts/check-reproducibility.sh
 
