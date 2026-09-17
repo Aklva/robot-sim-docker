@@ -207,6 +207,27 @@ local image explicitly:
 This refreshes the stable `/tmp/.docker.xauth` file and enters the running
 container directly; it does not use Isaac Lab's ephemeral Xauthority state.
 
+### Run The Four-Robot Showroom
+
+With `isaac-lab-ros2` running, enter the container and download the pinned
+official model assets once:
+
+```bash
+./scripts/enter-isaaclab-ros2.sh
+cd /workspace/isaaclab
+bash scripts/demos/setup_tron_showroom_assets.sh
+```
+
+Then launch the GUI showroom:
+
+```bash
+./isaaclab.sh -p scripts/demos/tron_showroom.py
+```
+
+The scene places Unitree G1, LimX Oli, LimX TRON1, and BOOSTER K1 from left to
+right. Downloaded sources and the generated K1 USD live in the persistent
+`data_storage` volume. For a non-GUI smoke test, add `--headless --max-steps 3`.
+
 ### Stop Isaac Lab ROS 2
 
 ```bash
