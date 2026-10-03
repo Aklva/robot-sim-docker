@@ -117,3 +117,7 @@ RUN mkdir -p /home/${USERNAME}/limx_ws/src /home/${USERNAME}/mujoco \
     && echo 'if [ -f /usr/share/gazebo/setup.bash ]; then source /usr/share/gazebo/setup.bash; fi' >> /home/${USERNAME}/.bashrc \
     && echo 'if [ -f "$HOME/limx_ws/install/setup.bash" ]; then source "$HOME/limx_ws/install/setup.bash"; fi' >> /home/${USERNAME}/.bashrc \
     && echo 'export LIMX_WS=${LIMX_WS:-$HOME/limx_ws}' >> /home/${USERNAME}/.bashrc
+
+# Host-specific terminal names such as xterm-ghostty are not guaranteed to
+# exist in Ubuntu container images.
+ENV TERM=xterm-256color
