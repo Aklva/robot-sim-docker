@@ -8,6 +8,10 @@ set -a
 [[ -f .env ]] && source .env
 set +a
 
+# Isaac Lab's x11.yaml is merged after our override and forwards the host TERM.
+# The image has xterm-256color terminfo, but not Ghostty's xterm-ghostty entry.
+export TERM=xterm-256color
+
 ISAACLAB_DIR="${ISAACLAB_DIR:-IsaacLab}"
 skip_build=0
 if [[ "${1:-}" == "--no-build" ]]; then
