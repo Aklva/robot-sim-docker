@@ -29,5 +29,6 @@ fi
 exec docker exec --interactive --tty \
   -e "DISPLAY=${DISPLAY:-:0}" \
   -e XAUTHORITY=/tmp/.docker.xauth \
+  -e TERM=xterm-256color \
   "${container_name}" \
   bash "$@"

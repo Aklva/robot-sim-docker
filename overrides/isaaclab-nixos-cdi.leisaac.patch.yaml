@@ -14,7 +14,8 @@ services:
       - "nvidia.com/gpu=all"
     environment:
       DISPLAY: ${DISPLAY:-:0}
-      TERM: ${TERM:-xterm-256color}
+      # Ghostty's terminfo is not installed in the Isaac Lab image.
+      TERM: xterm-256color
       QT_X11_NO_MITSHM: "1"
       XAUTHORITY: /tmp/.docker.xauth
       ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-42}
@@ -38,6 +39,14 @@ services:
       - type: bind
         source: ../../scripts/setup-mujoco-python-inside-isaaclab.sh
         target: /workspace/setup-mujoco-python-inside-isaaclab.sh
+        read_only: true
+      - type: bind
+        source: ../../examples/isaaclab/tron_showroom.py
+        target: /workspace/isaaclab/scripts/demos/tron_showroom.py
+        read_only: true
+      - type: bind
+        source: ../../examples/isaaclab/setup_tron_showroom_assets.sh
+        target: /workspace/isaaclab/scripts/demos/setup_tron_showroom_assets.sh
         read_only: true
 
   isaac-lab-ros2:
@@ -48,7 +57,8 @@ services:
       - "nvidia.com/gpu=all"
     environment:
       DISPLAY: ${DISPLAY:-:0}
-      TERM: ${TERM:-xterm-256color}
+      # Ghostty's terminfo is not installed in the Isaac Lab image.
+      TERM: xterm-256color
       QT_X11_NO_MITSHM: "1"
       XAUTHORITY: /tmp/.docker.xauth
       ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-42}
@@ -72,4 +82,12 @@ services:
       - type: bind
         source: ../../scripts/setup-mujoco-python-inside-isaaclab.sh
         target: /workspace/setup-mujoco-python-inside-isaaclab.sh
+        read_only: true
+      - type: bind
+        source: ../../examples/isaaclab/tron_showroom.py
+        target: /workspace/isaaclab/scripts/demos/tron_showroom.py
+        read_only: true
+      - type: bind
+        source: ../../examples/isaaclab/setup_tron_showroom_assets.sh
+        target: /workspace/isaaclab/scripts/demos/setup_tron_showroom_assets.sh
         read_only: true
